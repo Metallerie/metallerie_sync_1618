@@ -1,1 +1,50 @@
 
+<odoo>
+    <data>
+        <!-- Action pour synchronisation des sociétés -->
+        <record id="action_sync_company" model="ir.actions.server">
+            <field name="name">Synchroniser les Sociétés</field>
+            <field name="model_id" ref="model_metallerie_sync_company"/>
+            <field name="state">code</field>
+            <field name="code">model.sync_v16_to_v18()</field>
+        </record>
+
+        <!-- Bouton dans le menu -->
+        <menuitem id="menu_sync_company" 
+                  name="Synchronisation Sociétés" 
+                  parent="base.menu_administration" 
+                  action="action_sync_company"/>
+
+        <!-- Formulaire avec bouton manuel -->
+        <record id="view_form_sync_company" model="ir.ui.view">
+            <field name="name">view.sync.company.form</field>
+            <field name="model">metallerie.sync.company</field>
+            <field name="arch" type="xml">
+                <form string="Synchronisation Sociétés">
+                    <header>
+                        <button string="Lancer Synchronisation" type="object" name="sync_v16_to_v18" class="oe_highlight"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Action pour formulaire -->
+        <record id="action_form_sync_company" model="ir.actions.act_window">
+            <field name="name">Synchronisation Sociétés</field>
+            <field name="res_model">metallerie.sync.company</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="view_form_sync_company"/>
+        </record>
+
+        <!-- Menu pour le formulaire -->
+        <menuitem id="menu_form_sync_company" 
+                  name="Synchronisation Sociétés (Form)" 
+                  parent="base.menu_administration" 
+                  action="action_form_sync_company"/>
+    </data>
+</odoo>

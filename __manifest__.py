@@ -18,7 +18,7 @@ Long description of module's purpose
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base'],
+    'depends': ['base','account','sale_management','website','stock,purchase','website_sale','mrp','project_todo],
 
     # always loaded
     'data': [

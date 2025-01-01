@@ -2,7 +2,7 @@
 {
     'name': "metallerie_sync_1617",
 
-    'summary': "Short (1 phrase/line) summary of the module's purpose",
+    'summary': "Module de migration Odoo 16 vers 18",
 
     'description': """
 metallerie_sync_1618/

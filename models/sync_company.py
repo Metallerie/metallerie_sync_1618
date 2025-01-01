@@ -5,7 +5,7 @@ from .sync_manager import SyncManager
 class SyncCompany(models.Model):
     _name = 'metallerie.sync.company'
     _description = 'Synchronisation unidirectionnelle des sociétés (V16 → V18)'
-
+    name = fields.Char(string="Nom", default="Synchronisation des Sociétés")
     @staticmethod
     def sync_v16_to_v18():
         """

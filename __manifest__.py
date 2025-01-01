@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "metallerie_sync_1617",
+    'name': "metallerie_sync_1618",
 
     'summary': "Module de migration Odoo 16 vers 18",
 

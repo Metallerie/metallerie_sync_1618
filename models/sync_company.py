@@ -9,19 +9,7 @@ class SyncCompany(models.Model):
     _description = 'Synchronisation unidirectionnelle des sociétés (V16 → V18)'
 
     name = fields.Char(string="Nom", default="Synchronisation des Sociétés")
-
-    @staticmethod
-    def _get_field_types(model_name, connection):
-        """
-        Récupère les types de champs pour un modèle donné dans la base cible.
-        """
-        cursor = connection.cursor()
-        cursor.execute(f"""
-            SELECT name, ttype 
-            FROM ir_model_fields 
-            WHERE model = %s
-        """, (model_name,))
-        return {row[0]: row[1] for row in cursor.fetchall()}
+    partner_id = fields.Many2one('res.partner', string='Partner', required=True)
 
     @staticmethod
     def _check_conditions(field_name, value, target_cursor):
@@ -49,7 +37,7 @@ class SyncCompany(models.Model):
     @staticmethod
     def sync_v16_to_v18():
         """
-        Synchronise les sociétés de la V16 vers la V18 en détectant dynamiquement les champs simples.
+        Synchronise les sociétés de la V16 vers la V18 avec un système de conditions pour les champs.
         """
         _logger.info("Démarrage de la synchronisation des sociétés (V16 → V18)")
 
@@ -57,67 +45,48 @@ class SyncCompany(models.Model):
         target_conn = SyncManager._get_connection('1-metal-odoo18')  # Base V18
 
         try:
-            # Récupération des types de champs dans la cible (V18)
-            target_field_types = SyncCompany._get_field_types('res.company', target_conn)
-
-            # Filtrer les champs simples dans la cible
-            target_simple_fields = [
-                name for name, ttype in target_field_types.items()
-                if ttype in ['char', 'integer', 'float', 'boolean']
-            ]
-
-            fields_to_sync = target_simple_fields
-            fields_to_sync_str = ', '.join(fields_to_sync)
-
             source_cursor = source_conn.cursor()
             target_cursor = target_conn.cursor()
 
             # Extraction des données dans la V16
-            source_cursor.execute(f"""
-                SELECT {fields_to_sync_str}
+            source_cursor.execute("""
+                SELECT id, name, partner_id, email, phone, currency_id
                 FROM res_company
             """)
             companies = source_cursor.fetchall()
             _logger.info(f"{len(companies)} sociétés trouvées dans la base V16")
 
             for company in companies:
-                company_data = dict(zip(fields_to_sync, company))
+                (company_id, name, partner_id, email, phone, currency_id) = company
 
-                # Vérification et ajustement des champs avant synchronisation
-                for field in fields_to_sync:
-                    company_data[field] = SyncCompany._check_conditions(
-                        field, company_data.get(field), target_cursor
-                    )
+                # Appliquer les conditions
+                partner_id = SyncCompany._check_conditions('partner_id', partner_id, target_cursor)
+                currency_id = SyncCompany._check_conditions('currency_id', currency_id, target_cursor)
 
                 # Vérification si la société existe dans la V18
                 target_cursor.execute("""
                     SELECT id FROM res_company WHERE id = %s
-                """, (company_data['id'],))
+                """, (company_id,))
                 existing_company = target_cursor.fetchone()
 
                 if existing_company:
-                    # Mise à jour dynamique
-                    set_clause = ', '.join([f"{col} = %s" for col in fields_to_sync if col != 'id'])
-                    values = [company_data[col] for col in fields_to_sync if col != 'id'] + [company_data['id']]
-                    _logger.info(f"Mise à jour de la société ID {company_data['id']}")
-                    target_cursor.execute(f"""
+                    # Mise à jour inconditionnelle avec gestion des champs conditionnels
+                    _logger.info(f"Mise à jour de la société ID {company_id}")
+                    target_cursor.execute("""
                         UPDATE res_company
-                        SET {set_clause}
+                        SET name = %s, partner_id = %s, email = %s, phone = %s, currency_id = %s
                         WHERE id = %s
-                    """, values)
+                    """, (name, partner_id, email, phone, currency_id, company_id))
                 else:
-                    # Insertion dynamique
-                    columns_clause = ', '.join(fields_to_sync)
-                    placeholders = ', '.join(['%s'] * len(fields_to_sync))
-                    values = [company_data[col] for col in fields_to_sync]
-                    _logger.info(f"Insertion de la société ID {company_data['id']}")
-                    target_cursor.execute(f"""
-                        INSERT INTO res_company ({columns_clause})
-                        VALUES ({placeholders})
-                    """, values)
+                    # Insertion de la société
+                    _logger.info(f"Insertion de la société ID {company_id}")
+                    target_cursor.execute("""
+                        INSERT INTO res_company (id, name, partner_id, email, phone, currency_id)
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                    """, (company_id, name, partner_id, email, phone, currency_id))
 
             target_conn.commit()
-            _logger.info("Synchronisation dynamique terminée avec succès")
+            _logger.info("Synchronisation terminée avec succès")
         except Exception as e:
             _logger.error("Erreur lors de la synchronisation", exc_info=True)
             target_conn.rollback()

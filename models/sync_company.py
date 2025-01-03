@@ -9,6 +9,7 @@ class SyncCompany(models.Model):
     _description = 'Synchronisation unidirectionnelle des sociétés (V16 → V18)'
 
     name = fields.Char(string="Nom", default="Synchronisation des Sociétés")
+    partner_id = fields.Many2one('res.partner', string='Partner', required=True)
 
     @staticmethod
     def _check_conditions(field_name, value, target_cursor):
@@ -23,9 +24,14 @@ class SyncCompany(models.Model):
             else:
                 _logger.warning(f"Condition échouée pour {field_name}: valeur {value} introuvable")
                 return None
-        elif field_name == 'street':
-            # Ignorer si street est un champ calculé
-            return value if value else None
+        elif field_name == 'partner_id':
+            # Vérifie si le partenaire existe dans la cible
+            target_cursor.execute("SELECT id FROM res_partner WHERE id = %s", (value,))
+            if target_cursor.fetchone():
+                return value
+            else:
+                _logger.warning(f"Condition échouée pour {field_name}: valeur {value} introuvable")
+                return None
         return value
 
     @staticmethod
@@ -44,17 +50,17 @@ class SyncCompany(models.Model):
 
             # Extraction des données dans la V16
             source_cursor.execute("""
-                SELECT id, name, street, email, phone, currency_id
+                SELECT id, name, partner_id, email, phone, currency_id
                 FROM res_company
             """)
             companies = source_cursor.fetchall()
             _logger.info(f"{len(companies)} sociétés trouvées dans la base V16")
 
             for company in companies:
-                (company_id, name, street, email, phone, currency_id) = company
+                (company_id, name, partner_id, email, phone, currency_id) = company
 
                 # Appliquer les conditions
-                street = SyncCompany._check_conditions('street', street, target_cursor)
+                partner_id = SyncCompany._check_conditions('partner_id', partner_id, target_cursor)
                 currency_id = SyncCompany._check_conditions('currency_id', currency_id, target_cursor)
 
                 # Vérification si la société existe dans la V18
@@ -68,16 +74,16 @@ class SyncCompany(models.Model):
                     _logger.info(f"Mise à jour de la société ID {company_id}")
                     target_cursor.execute("""
                         UPDATE res_company
-                        SET name = %s, street = %s, email = %s, phone = %s, currency_id = %s
+                        SET name = %s, partner_id = %s, email = %s, phone = %s, currency_id = %s
                         WHERE id = %s
-                    """, (name, street, email, phone, currency_id, company_id))
+                    """, (name, partner_id, email, phone, currency_id, company_id))
                 else:
                     # Insertion de la société
                     _logger.info(f"Insertion de la société ID {company_id}")
                     target_cursor.execute("""
-                        INSERT INTO res_company (id, name, street, email, phone, currency_id)
+                        INSERT INTO res_company (id, name, partner_id, email, phone, currency_id)
                         VALUES (%s, %s, %s, %s, %s, %s)
-                    """, (company_id, name, street, email, phone, currency_id))
+                    """, (company_id, name, partner_id, email, phone, currency_id))
 
             target_conn.commit()
             _logger.info("Synchronisation terminée avec succès")

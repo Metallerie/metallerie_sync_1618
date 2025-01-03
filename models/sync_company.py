@@ -10,7 +10,7 @@ class SyncCompany(models.Model):
     @staticmethod
     def sync_v16_to_v18():
         """
-        Synchronise les sociétés de la V16 vers la V18 en conservant les IDs.
+        Synchronise les sociétés de la V16 vers la V18 en conservant les IDs et en gérant les champs relationnels.
         """
         source_conn = SyncManager._get_connection('1-metal-odoo16')  # Base V16
         target_conn = SyncManager._get_connection('1-metal-odoo18')  # Base V18
@@ -21,13 +21,25 @@ class SyncCompany(models.Model):
 
             # Extraction des données dans la V16
             source_cursor.execute("""
-                SELECT id, name, street, city, zip, country_id, email, phone, logo, write_date
+                SELECT id, name, street, city, zip, country_id, email, phone, logo, write_date, currency_id
                 FROM res_company
             """)
             companies = source_cursor.fetchall()
 
             for company in companies:
-                (company_id, name, street, city, zip_code, country_id, email, phone, logo, write_date) = company
+                (company_id, name, street, city, zip_code, country_id, email, phone, logo, write_date, currency_id) = company
+
+                # Vérifier si le country_id existe dans la base cible
+                if country_id:
+                    target_cursor.execute("SELECT id FROM res_country WHERE id = %s", (country_id,))
+                    if not target_cursor.fetchone():
+                        country_id = None  # Si le pays n'existe pas, définir comme None
+
+                # Vérifier si le currency_id existe dans la base cible
+                if currency_id:
+                    target_cursor.execute("SELECT id FROM res_currency WHERE id = %s", (currency_id,))
+                    if not target_cursor.fetchone():
+                        currency_id = None  # Si la devise n'existe pas, définir comme None
 
                 # Vérification si la société existe dans la V18
                 target_cursor.execute("""
@@ -42,15 +54,15 @@ class SyncCompany(models.Model):
                         target_cursor.execute("""
                             UPDATE res_company
                             SET name = %s, street = %s, city = %s, zip = %s, country_id = %s, 
-                                email = %s, phone = %s, logo = %s, write_date = %s
+                                email = %s, phone = %s, logo = %s, write_date = %s, currency_id = %s
                             WHERE id = %s
-                        """, (name, street, city, zip_code, country_id, email, phone, logo, write_date, company_id))
+                        """, (name, street, city, zip_code, country_id, email, phone, logo, write_date, currency_id, company_id))
                 else:
                     # Insertion avec l'ID de la V16
                     target_cursor.execute("""
-                        INSERT INTO res_company (id, name, street, city, zip, country_id, email, phone, logo, write_date)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    """, (company_id, name, street, city, zip_code, country_id, email, phone, logo, write_date))
+                        INSERT INTO res_company (id, name, street, city, zip, country_id, email, phone, logo, write_date, currency_id)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """, (company_id, name, street, city, zip_code, country_id, email, phone, logo, write_date, currency_id))
 
             target_conn.commit()
         except Exception as e:

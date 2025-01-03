@@ -21,7 +21,7 @@ class SyncCompany(models.Model):
 
             # Extraction des données dans la V16 (exclure les champs calculés comme street)
             source_cursor.execute("""
-                SELECT id, name, country_id, email, phone, logo, write_date, currency_id
+                SELECT id, name,  email, phone, logo, write_date, currency_id
                 FROM res_company
             """)
             companies = source_cursor.fetchall()
@@ -53,16 +53,16 @@ class SyncCompany(models.Model):
                     if write_date > existing_write_date:
                         target_cursor.execute("""
                             UPDATE res_company
-                            SET name = %s,  country_id = %s, 
+                            SET name = %s,  
                                 email = %s, phone = %s, logo = %s, write_date = %s, currency_id = %s
                             WHERE id = %s
-                        """, (name, city, email, phone, logo, write_date, currency_id, company_id))
+                        """, (name,  email, phone, logo, write_date, currency_id, company_id))
                 else:
                     # Insertion avec l'ID de la V16
                     target_cursor.execute("""
-                        INSERT INTO res_company (id, name,  country_id, email, phone, logo, write_date, currency_id)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                    """, (company_id, name,  country_id, email, phone, logo, write_date, currency_id))
+                        INSERT INTO res_company (id, name,  email, phone, logo, write_date, currency_id)
+                        VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    """, (company_id, name,  email, phone, logo, write_date, currency_id))
 
             target_conn.commit()
         except Exception as e:

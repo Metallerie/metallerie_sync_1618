@@ -42,6 +42,7 @@ metallerie_sync_1618/
         'views/templates.xml' ,
         'views/sync_views.xml' ,
         'data/cron_jobs.xml',
+        'security/ir.model.access.csv',
     ],
     # only loaded in demonstration mode
     'demo': [

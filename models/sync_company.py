@@ -1,5 +1,5 @@
 
-from odoo import models, api
+from odoo import models, api, field
 from .sync_manager import SyncManager
 
 class SyncCompany(models.Model):

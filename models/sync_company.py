@@ -27,14 +27,9 @@ class SyncCompany(models.Model):
             companies = source_cursor.fetchall()
 
             for company in companies:
-                (company_id, name, country_id, email, phone, mobile, write_date, currency_id) = company
+                (company_id, name, email, phone, write_date, currency_id) = company
 
-                # Vérifier si le country_id existe dans la base cible
-                if country_id:
-                    target_cursor.execute("SELECT id FROM res_country WHERE id = %s", (country_id,))
-                    if not target_cursor.fetchone():
-                        country_id = None  # Si le pays n'existe pas, définir comme None
-
+                
                 # Vérifier si le currency_id existe dans la base cible
                 if currency_id:
                     target_cursor.execute("SELECT id FROM res_currency WHERE id = %s", (currency_id,))

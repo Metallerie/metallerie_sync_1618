@@ -21,7 +21,7 @@ class SyncCompany(models.Model):
 
             # Extraction des données dans la V16 (exclure les champs calculés comme street)
             source_cursor.execute("""
-                SELECT id, name,  email, phone, write_date, currency_id
+                SELECT id, name, email, phone, write_date, currency_id
                 FROM res_company
             """)
             companies = source_cursor.fetchall()
@@ -29,7 +29,6 @@ class SyncCompany(models.Model):
             for company in companies:
                 (company_id, name, email, phone, write_date, currency_id) = company
 
-                
                 # Vérifier si le currency_id existe dans la base cible
                 if currency_id:
                     target_cursor.execute("SELECT id FROM res_currency WHERE id = %s", (currency_id,))
@@ -48,16 +47,15 @@ class SyncCompany(models.Model):
                     if write_date > existing_write_date:
                         target_cursor.execute("""
                             UPDATE res_company
-                            SET name = %s,  
-                                email = %s, phone = %s,  write_date = %s, currency_id = %s
+                            SET name = %s, email = %s, phone = %s, write_date = %s, currency_id = %s
                             WHERE id = %s
-                        """, (name,  email, phone,  write_date, currency_id, company_id))
+                        """, (name, email, phone, write_date, currency_id, company_id))
                 else:
                     # Insertion avec l'ID de la V16
                     target_cursor.execute("""
-                        INSERT INTO res_company (id, name,  email, phone,  write_date, currency_id)
+                        INSERT INTO res_company (id, name, email, phone, write_date, currency_id)
                         VALUES (%s, %s, %s, %s, %s, %s)
-                    """, (company_id, name,  email, phone,  write_date, currency_id))
+                    """, (company_id, name, email, phone, write_date, currency_id))
 
             target_conn.commit()
         except Exception as e:

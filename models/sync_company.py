@@ -13,7 +13,7 @@ class SyncCompany(models.Model):
     @staticmethod
     def sync_v16_to_v18():
         """
-        Synchronise les sociétés de la V16 vers la V18 en conservant les IDs et en excluant les champs calculés.
+        Synchronise les sociétés de la V16 vers la V18 en conservant les IDs et gérant les conflits avec l'enregistrement par défaut.
         """
         _logger.info("Démarrage de la synchronisation des sociétés (V16 → V18)")
 
@@ -24,7 +24,7 @@ class SyncCompany(models.Model):
             source_cursor = source_conn.cursor()
             target_cursor = target_conn.cursor()
 
-            # Extraction des données dans la V16 (exclure les champs calculés comme street)
+            # Extraction des données dans la V16
             _logger.info("Extraction des données depuis la base V16")
             source_cursor.execute("""
                 SELECT id, name, email, phone, write_date, currency_id
@@ -60,7 +60,18 @@ class SyncCompany(models.Model):
                             SET name = %s, email = %s, phone = %s, write_date = %s, currency_id = %s
                             WHERE id = %s
                         """, (name, email, phone, write_date, currency_id, company_id))
+                    else:
+                        _logger.info(f"Aucune mise à jour nécessaire pour la société ID {company_id}")
                 else:
+                    # Gestion du conflit avec "My Company"
+                    target_cursor.execute("""
+                        SELECT id FROM res_company WHERE name = 'My Company'
+                    """)
+                    my_company = target_cursor.fetchone()
+                    if my_company and my_company[0] != company_id:
+                        _logger.info(f"Suppression de l'enregistrement par défaut 'My Company' avec ID {my_company[0]}")
+                        target_cursor.execute("DELETE FROM res_company WHERE id = %s", (my_company[0],))
+
                     # Insertion avec l'ID de la V16
                     _logger.info(f"Insertion de la société ID {company_id}")
                     target_cursor.execute("""

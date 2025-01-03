@@ -1,2 +1,2 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_metallerie_sync_1617_metallerie_sync_1617,metallerie_sync_1617.metallerie_sync_1617,model_metallerie_sync_1617_metallerie_sync_1617,base.group_user,1,1,1,1
+access_metallerie_sync_company,access_metallerie_sync_company,model_metallerie_sync_company,base.group_user,1,1,1,1

@@ -57,7 +57,7 @@ class SyncCompany(models.Model):
         target_conn = SyncManager._get_connection('1-metal-odoo18')  # Base V18
 
         try:
-            # Récupération des types de champs dans la cible
+            # Récupération des types de champs dans la cible (V18)
             target_field_types = SyncCompany._get_field_types('res.company', target_conn)
 
             # Filtrer les champs simples dans la cible
@@ -66,17 +66,7 @@ class SyncCompany(models.Model):
                 if ttype in ['char', 'integer', 'float', 'boolean']
             ]
 
-            # Récupérer les champs disponibles dans la source
-            source_field_types = SyncCompany._get_field_types('res.company', source_conn)
-            source_simple_fields = set(source_field_types.keys())
-
-            # Déterminer les champs communs entre la source et la cible
-            fields_to_sync = list(set(target_simple_fields) & source_simple_fields)
-
-            if not fields_to_sync:
-                _logger.warning("Aucun champ commun trouvé entre la source et la cible")
-                return
-
+            fields_to_sync = target_simple_fields
             fields_to_sync_str = ', '.join(fields_to_sync)
 
             source_cursor = source_conn.cursor()
@@ -92,6 +82,12 @@ class SyncCompany(models.Model):
 
             for company in companies:
                 company_data = dict(zip(fields_to_sync, company))
+
+                # Vérification et ajustement des champs avant synchronisation
+                for field in fields_to_sync:
+                    company_data[field] = SyncCompany._check_conditions(
+                        field, company_data.get(field), target_cursor
+                    )
 
                 # Vérification si la société existe dans la V18
                 target_cursor.execute("""

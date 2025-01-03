@@ -64,4 +64,19 @@ class SyncCompany(models.Model):
                     # Insertion avec l'ID de la V16
                     _logger.info(f"Insertion de la société ID {company_id}")
                     target_cursor.execute("""
-                        INSERT I
+                        INSERT INTO res_company (id, name, email, phone, write_date, currency_id)
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                    """, (company_id, name, email, phone, write_date, currency_id))
+
+            _logger.info("Validation des changements dans la base V18")
+            target_conn.commit()
+        except Exception as e:
+            _logger.error("Erreur lors de la synchronisation des sociétés", exc_info=True)
+            target_conn.rollback()
+            raise e
+        finally:
+            source_cursor.close()
+            target_cursor.close()
+            source_conn.close()
+            target_conn.close()
+            _logger.info("Fin de la synchronisation des sociétés")

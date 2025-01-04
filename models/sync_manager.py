@@ -4,15 +4,14 @@ class SyncManager:
     @staticmethod
     def _get_connection(dbname):
         """
-        Récupère une connexion à la base spécifiée.
+        Récupère une connexion à la base spécifiée via la connexion interne Odoo.
         """
-        return psycopg2.connect(
-            dbname=dbname,
-            user='odoo',
-            password='0625159120',
-            host='localhost',
-            port='5432'
-        )
+        try:
+            import odoo
+            registry = odoo.registry(dbname)
+            return registry.cursor()
+        except Exception as e:
+            raise ConnectionError(f"Impossible de se connecter à la base de données {dbname}: {e}")
 
     @staticmethod
     def run_global_sync():

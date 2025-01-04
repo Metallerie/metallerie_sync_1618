@@ -11,11 +11,10 @@ class SyncCompany(models.Model):
     name = fields.Char(string="Nom", default="Synchronisation des Sociétés")
 
     @staticmethod
-    def _get_field_types(model_name, connection):
+    def _get_field_types(model_name, cursor):
         """
         Récupère les types de champs pour un modèle donné dans la base cible.
         """
-        cursor = connection.cursor()
         cursor.execute(f"""
             SELECT name, ttype 
             FROM ir_model_fields 
@@ -24,22 +23,22 @@ class SyncCompany(models.Model):
         return {row[0]: row[1] for row in cursor.fetchall()}
 
     @staticmethod
-    def _check_conditions(field_name, value, target_cursor):
+    def _check_conditions(field_name, value, cursor):
         """
         Vérifie les conditions dynamiques pour la synchronisation d'un champ.
         """
         if field_name == 'currency_id':
             # Vérifie si la devise existe dans la cible
-            target_cursor.execute("SELECT id FROM res_currency WHERE id = %s", (value,))
-            if target_cursor.fetchone():
+            cursor.execute("SELECT id FROM res_currency WHERE id = %s", (value,))
+            if cursor.fetchone():
                 return value
             else:
                 _logger.warning(f"Condition échouée pour {field_name}: valeur {value} introuvable")
                 return None
         elif field_name == 'partner_id':
             # Vérifie si le partenaire existe dans la cible
-            target_cursor.execute("SELECT id FROM res_partner WHERE id = %s", (value,))
-            if target_cursor.fetchone():
+            cursor.execute("SELECT id FROM res_partner WHERE id = %s", (value,))
+            if cursor.fetchone():
                 return value
             else:
                 _logger.warning(f"Condition échouée pour {field_name}: valeur {value} introuvable")
@@ -56,17 +55,12 @@ class SyncCompany(models.Model):
         source_cursor = SyncManager._get_cursor('1-metal-odoo16')  # Curseur V16
         target_cursor = SyncManager._get_cursor('1-metal-odoo18')  # Curseur V18
 
-
         try:
             # Récupération des types de champs dans la cible
-            field_types = SyncCompany._get_field_types('res.company', target_conn)
+            field_types = SyncCompany._get_field_types('res.company', target_cursor)
 
             # Filtrer les champs simples
             simple_fields = [name for name, ttype in field_types.items() if ttype in ['char', 'integer', 'float', 'boolean']]
-
-            # Préparer la liste des champs communs
-            source_cursor = source_conn.cursor()
-            target_cursor = target_conn.cursor()
 
             # Vérification dynamique des colonnes dans la source
             source_cursor.execute("""
@@ -122,14 +116,12 @@ class SyncCompany(models.Model):
                         VALUES ({placeholders})
                     """, values)
 
-            target_conn.commit()
+            target_cursor.commit()
             _logger.info("Synchronisation dynamique terminée avec succès")
         except Exception as e:
             _logger.error("Erreur lors de la synchronisation", exc_info=True)
-            target_conn.rollback()
+            target_cursor.rollback()
             raise e
         finally:
             source_cursor.close()
             target_cursor.close()
-            source_conn.close()
-            target_conn.close()

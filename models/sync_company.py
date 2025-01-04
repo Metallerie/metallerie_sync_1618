@@ -53,8 +53,9 @@ class SyncCompany(models.Model):
         """
         _logger.info("Démarrage de la synchronisation des sociétés (V16 → V18)")
 
-        source_conn = SyncManager._get_connection('1-metal-odoo16')  # Base V16
-        target_conn = SyncManager._get_connection('1-metal-odoo18')  # Base V18
+        source_cursor = SyncManager._get_cursor('1-metal-odoo16')  # Curseur V16
+        target_cursor = SyncManager._get_cursor('1-metal-odoo18')  # Curseur V18
+
 
         try:
             # Récupération des types de champs dans la cible

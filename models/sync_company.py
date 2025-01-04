@@ -102,7 +102,7 @@ class SyncCompany(models.Model):
                     values = [company_data[col] for col in common_fields if col != 'id'] + [company_data['id']]
                     _logger.info(f"Mise à jour de la société ID {company_data['id']}")
                     for field, value in company_data.items():
-                        _logger.info(f"  Champ: {field}, Valeur: {value}")
+                        print(f"  Champ: {field}, Valeur: {value}")
                     target_cursor.execute(f"""
                         UPDATE res_company
                         SET {set_clause}
@@ -115,7 +115,7 @@ class SyncCompany(models.Model):
                     values = [company_data[col] for col in common_fields]
                     _logger.info(f"Insertion de la société ID {company_data['id']}")
                     for field, value in company_data.items():
-                        _logger.info(f"  Champ: {field}, Valeur: {value}")
+                        print(f"  Champ: {field}, Valeur: {value}")
                     target_cursor.execute(f"""
                         INSERT INTO res_company ({columns_clause})
                         VALUES ({placeholders})

@@ -64,10 +64,20 @@ class SyncCompany(models.Model):
             simple_fields = [name for name, ttype in field_types.items() if ttype in ['char', 'integer', 'float', 'boolean']]
 
             # Préparer la liste des champs communs
-            fields_to_sync = ', '.join(simple_fields)
-
             source_cursor = source_conn.cursor()
             target_cursor = target_conn.cursor()
+
+            # Vérification dynamique des colonnes dans la source
+            source_cursor.execute("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = 'res_company'
+            """)
+            source_columns = {row[0] for row in source_cursor.fetchall()}
+
+            # Filtrer les champs disponibles dans la source et la cible
+            common_fields = [field for field in simple_fields if field in source_columns]
+            fields_to_sync = ', '.join(common_fields)
 
             # Extraction des données dans la V16
             source_cursor.execute(f"""
@@ -78,7 +88,7 @@ class SyncCompany(models.Model):
             _logger.info(f"{len(companies)} sociétés trouvées dans la base V16")
 
             for company in companies:
-                company_data = dict(zip(simple_fields, company))
+                company_data = dict(zip(common_fields, company))
 
                 # Vérification si la société existe dans la V18
                 target_cursor.execute("""
@@ -88,8 +98,8 @@ class SyncCompany(models.Model):
 
                 if existing_company:
                     # Mise à jour dynamique
-                    set_clause = ', '.join([f"{col} = %s" for col in simple_fields if col != 'id'])
-                    values = [company_data[col] for col in simple_fields if col != 'id'] + [company_data['id']]
+                    set_clause = ', '.join([f"{col} = %s" for col in common_fields if col != 'id'])
+                    values = [company_data[col] for col in common_fields if col != 'id'] + [company_data['id']]
                     _logger.info(f"Mise à jour de la société ID {company_data['id']}")
                     target_cursor.execute(f"""
                         UPDATE res_company
@@ -98,9 +108,9 @@ class SyncCompany(models.Model):
                     """, values)
                 else:
                     # Insertion dynamique
-                    columns_clause = ', '.join(simple_fields)
-                    placeholders = ', '.join(['%s'] * len(simple_fields))
-                    values = [company_data[col] for col in simple_fields]
+                    columns_clause = ', '.join(common_fields)
+                    placeholders = ', '.join(['%s'] * len(common_fields))
+                    values = [company_data[col] for col in common_fields]
                     _logger.info(f"Insertion de la société ID {company_data['id']}")
                     target_cursor.execute(f"""
                         INSERT INTO res_company ({columns_clause})

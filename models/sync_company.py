@@ -100,7 +100,7 @@ class SyncCompany(models.Model):
                     # Mise à jour dynamique
                     set_clause = ', '.join([f"{col} = %s" for col in common_fields if col != 'id'])
                     values = [company_data[col] for col in common_fields if col != 'id'] + [company_data['id']]
-                    _logger.info(f"Mise à jour de la société ID {company_data['id']}")
+                    _logger.info(f"Mise à jour de la société ID {company_data['id']} avec les données : {company_data}")
                     target_cursor.execute(f"""
                         UPDATE res_company
                         SET {set_clause}
@@ -111,7 +111,7 @@ class SyncCompany(models.Model):
                     columns_clause = ', '.join(common_fields)
                     placeholders = ', '.join(['%s'] * len(common_fields))
                     values = [company_data[col] for col in common_fields]
-                    _logger.info(f"Insertion de la société ID {company_data['id']}")
+                    _logger.info(f"Insertion de la société ID {company_data['id']} avec les données : {company_data}")
                     target_cursor.execute(f"""
                         INSERT INTO res_company ({columns_clause})
                         VALUES ({placeholders})

@@ -2,9 +2,9 @@ import psycopg2
 
 class SyncManager:
     @staticmethod
-    def _get_connection(dbname):
+    def _get_cursor(dbname):
         """
-        Récupère une connexion à la base spécifiée via la connexion interne Odoo.
+        Récupère un curseur à la base spécifiée via la connexion interne Odoo.
         """
         try:
             import odoo

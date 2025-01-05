@@ -65,10 +65,10 @@ class SyncPartner(models.Model):
             source_columns = {row[0] for row in source_cursor.fetchall()}
 
             common_fields = [field for field in simple_fields if field in source_columns]
-            fields_to_sync = ', '.join(common_fields)
+            _logger.info(f"Champs communs détectés : {common_fields}")
 
             source_cursor.execute(f"""
-                SELECT {fields_to_sync}
+                SELECT {', '.join(common_fields)}
                 FROM res_partner
             """)
             partners = source_cursor.fetchall()
@@ -77,7 +77,7 @@ class SyncPartner(models.Model):
             for partner in partners:
                 partner_data = dict(zip(common_fields, partner))
 
-                # Ignore missing or incompatible fields dynamically
+                # Vérifier si les champs sont valides et compatibles
                 partner_data = {
                     key: SyncPartner._check_conditions(key, value, target_cursor)
                     for key, value in partner_data.items()

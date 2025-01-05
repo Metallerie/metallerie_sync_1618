@@ -23,6 +23,18 @@ class SyncPartner(models.Model):
         return {row[0]: row[1] for row in cursor.fetchall()}
 
     @staticmethod
+    def _get_required_fields(model_name, cursor):
+        """
+        Récupère les champs obligatoires pour un modèle donné.
+        """
+        cursor.execute("""
+            SELECT name 
+            FROM ir_model_fields 
+            WHERE model = %s AND required = TRUE
+        """, (model_name,))
+        return {row[0] for row in cursor.fetchall()}
+
+    @staticmethod
     def _check_conditions(field_name, value, cursor):
         """
         Vérifie les conditions dynamiques pour la synchronisation d'un champ.
@@ -57,6 +69,10 @@ class SyncPartner(models.Model):
             field_types = SyncPartner._get_field_types('res.partner', target_cursor)
             simple_fields = [name for name, ttype in field_types.items() if ttype in ['char', 'integer', 'float', 'boolean']]
 
+            # Récupérer les champs obligatoires
+            required_fields = SyncPartner._get_required_fields('res.partner', target_cursor)
+            _logger.info(f"Champs obligatoires détectés : {required_fields}")
+
             source_cursor.execute("""
                 SELECT column_name 
                 FROM information_schema.columns 
@@ -68,7 +84,6 @@ class SyncPartner(models.Model):
             common_fields = [field for field in simple_fields if field in source_columns]
             _logger.info(f"Champs communs détectés : {common_fields}")
 
-            # Vérifier la présence des champs cibles dans la base cible
             target_cursor.execute("""
                 SELECT column_name 
                 FROM information_schema.columns 
@@ -100,6 +115,11 @@ class SyncPartner(models.Model):
                     for key, value in partner_data.items()
                     if key in final_fields and value is not None
                 }
+
+                # Ajouter des valeurs par défaut pour les champs obligatoires
+                for field in required_fields:
+                    if field not in partner_data:
+                        partner_data[field] = False  # Par défaut : False pour les booléens
 
                 target_cursor.execute("""
                     SELECT id FROM res_partner WHERE id = %s

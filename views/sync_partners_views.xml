@@ -1,17 +1,5 @@
 <odoo>
     <data>
-        <!-- Vue pour la synchronisation des partenaires -->
-        <record id="view_partner_form_sync_button" model="ir.ui.view">
-            <field name="name">res.partner.form.sync.button</field>
-            <field name="model">res.partner</field>
-            <field name="inherit_id" ref="base.view_partner_form"/>
-            <field name="arch" type="xml">
-                <xpath expr="//form/header" position="inside">
-                    <button string="Synchroniser" type="object" name="sync_v16_to_v18" class="oe_highlight"/>
-                </xpath>
-            </field>
-        </record>
-
         <!-- Action serveur pour la synchronisation des partenaires -->
         <record id="action_sync_partners" model="ir.actions.server">
             <field name="name">Synchroniser Partenaires</field>
@@ -21,6 +9,11 @@
                 action = env['metallerie.sync.partner'].sync_v16_to_v18()
             </field>
         </record>
+
+        <!-- Menu pour la synchronisation des partenaires -->
+        <menuitem id="menu_sync_partners"
+                  name="Synchronisation Partenaires"
+                  parent="base.menu_administration"
+                  action="action_sync_partners"/>
     </data>
 </odoo>
-

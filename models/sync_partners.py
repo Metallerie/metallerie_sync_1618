@@ -96,12 +96,12 @@ class SyncPartner(models.Model):
             _logger.info(f"Champs finaux pour synchronisation : {final_fields}")
 
             env = api.Environment(target_cursor, api.SUPERUSER_ID, {})
-            env['metallerie.sync.field_status'].search([]).unlink()
+            env['metallerie.sync.field.status'].search([]).unlink()
 
             for field in field_types.keys():
                 if field not in final_fields:
                     reason = "Absent dans la table cible" if field not in target_columns else "Type non compatible"
-                    env['metallerie.sync.field_status'].create({
+                    env['metallerie.sync.field.status'].create({
                         'field_name': field,
                         'field_type': field_types[field],
                         'field_relation': 'Relation' if field_types[field] in ['many2one', 'one2many', 'many2many'] else '',
@@ -109,7 +109,7 @@ class SyncPartner(models.Model):
                         'ignore_reason': reason,
                     })
                 else:
-                    env['metallerie.sync.field_status'].create({
+                    env['metallerie.sync.field.status'].create({
                         'field_name': field,
                         'field_type': field_types[field],
                         'field_relation': 'Relation' if field_types[field] in ['many2one', 'one2many', 'many2many'] else '',

@@ -34,6 +34,7 @@ metallerie_sync_1618/
     'version': '0.1',
 
     # any module necessary for this one to work correctly
+    'depends': ['base','account','partners','product','sale_management','website','stock','purchase','website_sale','mrp','project_todo'],
 
     # always loaded
     'data': [

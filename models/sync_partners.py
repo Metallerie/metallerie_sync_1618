@@ -9,7 +9,12 @@ class SyncPartner(models.Model):
     _description = 'Synchronisation unidirectionnelle des partenaires (V16 → V18)'
 
     name = fields.Char(string="Nom", default="Synchronisation des Partenaires")
-
+    def action_sync_partners(self):
+        self.env['metallerie.sync.partner'].sync_v16_to_v18()
+        return {
+            'type': 'ir.actions.client',
+            'tag': 'reload',
+        }
     @staticmethod
     def _get_field_types(model_name, cursor):
         """

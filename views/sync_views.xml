@@ -1,53 +1,50 @@
+
 <odoo>
     <data>
-        <!-- Vue pour la synchronisation des partenaires -->
-        <record id="view_partner_form_sync_button" model="ir.ui.view">
-            <field name="name">res.partner.form.sync.button</field>
-            <field name="model">res.partner</field>
-            <field name="inherit_id" ref="base.view_partner_form"/>
-            <field name="arch" type="xml">
-                <xpath expr="//header" position="inside">
-                    <button name="%(action_sync_partners)d"
-                            string="Synchroniser"
-                            type="action"
-                            class="oe_highlight"/>
-                </xpath>
-            </field>
-        </record>
-
-        <!-- Action serveur pour la synchronisation des partenaires -->
-        <record id="action_sync_partners" model="ir.actions.server">
-            <field name="name">Synchroniser Partenaires</field>
-            <field name="model_id" ref="base.model_res_partner"/>
+        <!-- Action pour synchronisation des sociétés -->
+        <record id="action_sync_company" model="ir.actions.server">
+            <field name="name">Synchroniser les Sociétés</field>
+            <field name="model_id" ref="model_metallerie_sync_company"/>
             <field name="state">code</field>
-            <field name="code">
-                action = env['metallerie.sync.partner'].sync_v16_to_v18()
-            </field>
+            <field name="code">model.sync_v16_to_v18()</field>
         </record>
 
-        <!-- Vue pour la synchronisation des sociétés -->
-        <record id="view_company_form_sync_button" model="ir.ui.view">
-            <field name="name">res.company.form.sync.button</field>
-            <field name="model">res.company</field>
-            <field name="inherit_id" ref="base.view_company_form"/>
+        <!-- Bouton dans le menu -->
+        <menuitem id="menu_sync_company" 
+                  name="Synchronisation Sociétés" 
+                  parent="base.menu_administration" 
+                  action="action_sync_company"/>
+
+        <!-- Formulaire avec bouton manuel -->
+        <record id="view_form_sync_company" model="ir.ui.view">
+            <field name="name">view.sync.company.form</field>
+            <field name="model">metallerie.sync.company</field>
             <field name="arch" type="xml">
-                <xpath expr="//header" position="inside">
-                    <button name="%(action_sync_companies)d"
-                            string="Synchroniser"
-                            type="action"
-                            class="oe_highlight"/>
-                </xpath>
+                <form string="Synchronisation Sociétés">
+                    <header>
+                        <button string="Lancer Synchronisation" type="object" name="sync_v16_to_v18" class="oe_highlight"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                        </group>
+                    </sheet>
+                </form>
             </field>
         </record>
 
-        <!-- Action serveur pour la synchronisation des sociétés -->
-        <record id="action_sync_companies" model="ir.actions.server">
-            <field name="name">Synchroniser Sociétés</field>
-            <field name="model_id" ref="base.model_res_company"/>
-            <field name="state">code</field>
-            <field name="code">
-                action = env['metallerie.sync.company'].sync_v16_to_v18()
-            </field>
+        <!-- Action pour formulaire -->
+        <record id="action_form_sync_company" model="ir.actions.act_window">
+            <field name="name">Synchronisation Sociétés</field>
+            <field name="res_model">metallerie.sync.company</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="view_form_sync_company"/>
         </record>
+
+        <!-- Menu pour le formulaire -->
+        <menuitem id="menu_form_sync_company" 
+                  name="Synchronisation Sociétés (Form)" 
+                  parent="base.menu_administration" 
+                  action="action_form_sync_company"/>
     </data>
 </odoo>

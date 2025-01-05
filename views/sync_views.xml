@@ -32,6 +32,26 @@
                 </form>
             </field>
         </record>
+    <record id="action_sync_partners" model="ir.actions.server">
+    <field name="name">Synchroniser Partenaires</field>
+    <field name="model_id" ref="model_metallerie_sync_partner"/>
+    <field name="binding_model_id" ref="base.model_res_partner"/>
+    <field name="state">code</field>
+    <field name="code">
+        action = env['metallerie.sync.partner'].sync_v16_to_v18()
+    </field>
+</record>
+
+<record id="partner_form_view_inherit" model="ir.ui.view">
+    <field name="name">res.partner.form.sync.button</field>
+    <field name="model">res.partner</field>
+    <field name="inherit_id" ref="base.view_partner_form"/>
+    <field name="arch" type="xml">
+        <header>
+            <button name="%(action_sync_partners)d" string="Synchroniser" type="action" class="oe_highlight"/>
+        </header>
+    </field>
+</record>
 
         <!-- Action pour formulaire -->
         <record id="action_form_sync_company" model="ir.actions.act_window">

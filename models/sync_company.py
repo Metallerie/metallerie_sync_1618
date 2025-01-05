@@ -44,7 +44,7 @@ class SyncPartner(models.Model):
         return value
 
     @staticmethod
-    def sync_v16_to_v18():
+    def sync_v16_to_v18_compagy():
         """
         Synchronise les partenaires de la V16 vers la V18 en détectant dynamiquement les champs simples.
         """

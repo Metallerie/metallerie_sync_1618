@@ -5,7 +5,7 @@
         <field name="arch" type="xml">
             <form string="Synchronisation des Sociétés">
                 <header>
-                    <button name="sync_v16_to_v18" string="Lancer la Synchronisation" type="object" class="oe_highlight"/>
+                    <button name="sync_v16_to_v18_compagny" string="Lancer la Synchronisation" type="object" class="oe_highlight"/>
                 </header>
                 <sheet>
                     <group>

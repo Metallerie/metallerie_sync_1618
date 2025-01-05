@@ -1,7 +1,7 @@
 from odoo import models, fields
 
 class SyncFieldStatus(models.Model):
-    _name = 'metallerie.sync.field_status'
+    _name = 'metallerie.sync.field.status'
     _description = 'Statut de synchronisation des champs'
 
     field_name = fields.Char(string="Nom du champ")

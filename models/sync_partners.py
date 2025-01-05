@@ -9,12 +9,7 @@ class SyncPartner(models.Model):
     _description = 'Synchronisation unidirectionnelle des partenaires (V16 → V18)'
 
     name = fields.Char(string="Nom", default="Synchronisation des Partenaires")
-    def action_sync_partners(self):
-        self.env['metallerie.sync.partner'].sync_v16_to_v18()
-        return {
-            'type': 'ir.actions.client',
-            'tag': 'reload',
-        }
+
     @staticmethod
     def _get_field_types(model_name, cursor):
         """
@@ -82,14 +77,21 @@ class SyncPartner(models.Model):
             for partner in partners:
                 partner_data = dict(zip(common_fields, partner))
 
+                # Ignore missing or incompatible fields dynamically
+                partner_data = {
+                    key: SyncPartner._check_conditions(key, value, target_cursor)
+                    for key, value in partner_data.items()
+                    if key in common_fields and value is not None
+                }
+
                 target_cursor.execute("""
                     SELECT id FROM res_partner WHERE id = %s
-                """, (partner_data['id'],))
+                """, (partner_data.get('id'),))
                 existing_partner = target_cursor.fetchone()
 
                 if existing_partner:
-                    set_clause = ', '.join([f"{col} = %s" for col in common_fields if col != 'id'])
-                    values = [partner_data[col] for col in common_fields if col != 'id'] + [partner_data['id']]
+                    set_clause = ', '.join([f"{col} = %s" for col in partner_data.keys() if col != 'id'])
+                    values = [partner_data[col] for col in partner_data.keys() if col != 'id'] + [partner_data['id']]
                     _logger.info(f"Mise à jour du partenaire ID {partner_data['id']}")
                     target_cursor.execute(f"""
                         UPDATE res_partner
@@ -97,10 +99,10 @@ class SyncPartner(models.Model):
                         WHERE id = %s
                     """, values)
                 else:
-                    columns_clause = ', '.join(common_fields)
-                    placeholders = ', '.join(['%s'] * len(common_fields))
-                    values = [partner_data[col] for col in common_fields]
-                    _logger.info(f"Insertion du partenaire ID {partner_data['id']}")
+                    columns_clause = ', '.join(partner_data.keys())
+                    placeholders = ', '.join(['%s'] * len(partner_data))
+                    values = [partner_data[col] for col in partner_data.keys()]
+                    _logger.info(f"Insertion du partenaire ID {partner_data.get('id')}")
                     target_cursor.execute(f"""
                         INSERT INTO res_partner ({columns_clause})
                         VALUES ({placeholders})

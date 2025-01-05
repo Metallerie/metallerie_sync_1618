@@ -33,14 +33,14 @@ metallerie_sync_1618/
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base','account','sale_management','website','stock','purchase','website_sale','mrp','project_todo'],
 
     # always loaded
     'data': [
         # 'security/ir.model.access.csv',
         'views/views.xml',
         'views/templates.xml' ,
-        'views/sync_views.xml' ,
+        'views/sync_company_views.xml' ,
+        'views/sync_partners_views.xml' ,
         'data/cron_jobs.xml',
         'security/ir.model.access.csv',
     ],

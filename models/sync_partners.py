@@ -64,24 +64,36 @@ class SyncPartner(models.Model):
             """)
             source_columns = {row[0] for row in source_cursor.fetchall()}
 
+            # Filtrer les champs communs entre source et cible
             common_fields = [field for field in simple_fields if field in source_columns]
             _logger.info(f"Champs communs détectés : {common_fields}")
 
+            # Vérifier la présence des champs cibles dans la base cible
+            target_cursor.execute("""
+                SELECT column_name 
+                FROM information_schema.columns 
+                WHERE table_name = 'res_partner'
+            """)
+            target_columns = {row[0] for row in target_cursor.fetchall()}
+
+            # Exclure les champs non présents dans la cible
+            final_fields = [field for field in common_fields if field in target_columns]
+
             source_cursor.execute(f"""
-                SELECT {', '.join(common_fields)}
+                SELECT {', '.join(final_fields)}
                 FROM res_partner
             """)
             partners = source_cursor.fetchall()
             _logger.info(f"{len(partners)} partenaires trouvés dans la base V16")
 
             for partner in partners:
-                partner_data = dict(zip(common_fields, partner))
+                partner_data = dict(zip(final_fields, partner))
 
                 # Vérifier si les champs sont valides et compatibles
                 partner_data = {
                     key: SyncPartner._check_conditions(key, value, target_cursor)
                     for key, value in partner_data.items()
-                    if key in common_fields and value is not None
+                    if key in final_fields and value is not None
                 }
 
                 target_cursor.execute("""

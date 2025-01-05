@@ -37,7 +37,6 @@ metallerie_sync_1618/
     'depends': ['base','web','account','product','sale_management','website','stock','purchase','website_sale','mrp','project_todo'],
 
     'data': [
-        'security/ir.model.access.csv',
         'views/views.xml',
         'views/templates.xml' ,
         'views/sync_company_views.xml' ,

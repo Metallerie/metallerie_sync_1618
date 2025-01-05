@@ -1,45 +1,28 @@
 <odoo>
-    <data>
-        <!-- Action serveur pour la synchronisation des sociétés -->
-        <record id="action_sync_companies" model="ir.actions.server">
-            <field name="name">Synchroniser Sociétés</field>
-            <field name="model_id" ref="model_metallerie_sync_company"/>
-            <field name="state">code</field>
-            <field name="code">
-                env['metallerie.sync.company'].sync_v16_to_v18()
-            </field>
-        </record>
+    <record id="view_sync_company_form" model="ir.ui.view">
+        <field name="name">sync.company.form</field>
+        <field name="model">metallerie.sync.company</field>
+        <field name="arch" type="xml">
+            <form string="Synchronisation des Sociétés">
+                <header>
+                    <button name="sync_v16_to_v18" string="Lancer la Synchronisation" type="object" class="oe_highlight"/>
+                </header>
+                <sheet>
+                    <group>
+                        <field name="name" readonly="1"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
 
-        <!-- Formulaire avec bouton manuel -->
-        <record id="view_form_sync_company" model="ir.ui.view">
-            <field name="name">view.sync.company.form</field>
-            <field name="model">metallerie.sync.company</field>
-            <field name="arch" type="xml">
-                <form string="Synchronisation Sociétés">
-                    <header>
-                        <button string="Lancer Synchronisation" type="object" name="sync_v16_to_v18" class="oe_highlight"/>
-                    </header>
-                    <sheet>
-                        <group>
-                            <field name="name"/>
-                        </group>
-                    </sheet>
-                </form>
-            </field>
-        </record>
+    <record id="action_sync_company" model="ir.actions.act_window">
+        <field name="name">Synchronisation Sociétés</field>
+        <field name="res_model">metallerie.sync.company</field>
+        <field name="view_mode">form</field>
+        <field name="view_id" ref="view_sync_company_form"/>
+        <field name="target">inline</field>
+    </record>
 
-        <!-- Action pour formulaire -->
-        <record id="action_form_sync_company" model="ir.actions.act_window">
-            <field name="name">Synchronisation Sociétés</field>
-            <field name="res_model">metallerie.sync.company</field>
-            <field name="view_mode">form</field>
-            <field name="view_id" ref="view_form_sync_company"/>
-        </record>
-
-        <!-- Menu pour le formulaire -->
-        <menuitem id="menu_form_sync_company" 
-                  name="Synchronisation Sociétés (Form)" 
-                  parent="base.menu_administration" 
-                  action="action_form_sync_company"/>
-    </data>
+    <menuitem id="menu_sync_company" name="Synchronisation Sociétés" parent="base.menu_administration" action="action_sync_company"/>
 </odoo>

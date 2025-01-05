@@ -3,7 +3,7 @@
         <!-- Vue liste pour les statuts des champs -->
         <record id="view_sync_field_status_tree" model="ir.ui.view">
             <field name="name">sync.field.status.tree</field>
-            <field name="model">metallerie.sync.field_status</field>
+            <field name="model">metallerie.sync.field.status</field>
             <field name="arch" type="xml">
                 <tree string="Statuts des champs">
                     <field name="field_name"/>

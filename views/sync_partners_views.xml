@@ -17,7 +17,7 @@
             <field name="arch" type="xml">
                 <form string="Synchronisation Partenaires">
                     <header>
-                        <button string="Lancer Synchronisation" type="object" name="sync_v16_to_v18" class="oe_highlight"/>
+                        <button string="Lancer Synchronisation" type="object" name="sync_v16_to_v18_partners" class="oe_highlight"/>
                     </header>
                     <sheet>
                         <group>

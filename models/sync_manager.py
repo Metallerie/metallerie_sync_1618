@@ -19,6 +19,12 @@ class SyncManager:
         Orchestrateur de synchronisation pour tous les modèles.
         """
         from .sync_company import SyncCompany
+        from .sync_partners import SyncPartner
+
+        # Synchronisation des sociétés
         SyncCompany.sync_v16_to_v18()
-        # Ajouter d'autres appels à des synchronisations ici (e.g., produits, partenaires, etc.)
+
+        # Synchronisation des partenaires
+        SyncPartner.sync_v16_to_v18()
+
         print("Synchronisation globale terminée.")

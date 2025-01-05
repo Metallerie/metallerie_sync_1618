@@ -78,6 +78,11 @@ class SyncPartner(models.Model):
 
             # Exclure les champs non présents dans la cible
             final_fields = [field for field in common_fields if field in target_columns]
+            _logger.info(f"Champs finaux pour synchronisation : {final_fields}")
+
+            if not final_fields:
+                _logger.warning("Aucun champ compatible pour la synchronisation.")
+                return
 
             source_cursor.execute(f"""
                 SELECT {', '.join(final_fields)}

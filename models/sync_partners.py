@@ -4,6 +4,16 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
+class SyncFieldStatus(models.Model):
+    _name = 'metallerie.sync.field_status'
+    _description = 'Statut de synchronisation des champs'
+
+    field_name = fields.Char(string="Nom du champ")
+    field_type = fields.Char(string="Type du champ")
+    field_relation = fields.Char(string="Relation")
+    field_status = fields.Selection([('synced', 'Synchronisé'), ('ignored', 'Ignoré')], string="Statut")
+    ignore_reason = fields.Text(string="Raison ignorée")
+
 class SyncPartner(models.Model):
     _name = 'metallerie.sync.partner'
     _description = 'Synchronisation unidirectionnelle des partenaires (V16 → V18)'
@@ -95,9 +105,27 @@ class SyncPartner(models.Model):
             final_fields = [field for field in common_fields if field in target_columns]
             _logger.info(f"Champs finaux pour synchronisation : {final_fields}")
 
-            if not final_fields:
-                _logger.warning("Aucun champ compatible pour la synchronisation.")
-                return
+            env = api.Environment(target_cursor, api.SUPERUSER_ID, {})
+            env['metallerie.sync.field_status'].search([]).unlink()
+
+            for field in field_types.keys():
+                if field not in final_fields:
+                    reason = "Absent dans la table cible" if field not in target_columns else "Type non compatible"
+                    env['metallerie.sync.field_status'].create({
+                        'field_name': field,
+                        'field_type': field_types[field],
+                        'field_relation': 'Relation' if field_types[field] in ['many2one', 'one2many', 'many2many'] else '',
+                        'field_status': 'ignored',
+                        'ignore_reason': reason,
+                    })
+                else:
+                    env['metallerie.sync.field_status'].create({
+                        'field_name': field,
+                        'field_type': field_types[field],
+                        'field_relation': 'Relation' if field_types[field] in ['many2one', 'one2many', 'many2many'] else '',
+                        'field_status': 'synced',
+                        'ignore_reason': '',
+                    })
 
             source_cursor.execute(f"""
                 SELECT {', '.join(final_fields)}

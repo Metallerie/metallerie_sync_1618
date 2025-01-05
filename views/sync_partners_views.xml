@@ -3,17 +3,43 @@
         <!-- Action serveur pour la synchronisation des partenaires -->
         <record id="action_sync_partners" model="ir.actions.server">
             <field name="name">Synchroniser Partenaires</field>
-            <field name="model_id" ref="base.model_res_partner"/>
+            <field name="model_id" ref="model_metallerie_sync_partner"/>
             <field name="state">code</field>
             <field name="code">
-                action = env['metallerie.sync.partner'].sync_v16_to_v18()
+                env['metallerie.sync.partner'].sync_v16_to_v18()
             </field>
         </record>
 
-        <!-- Menu pour la synchronisation des partenaires -->
-        <menuitem id="menu_sync_partners"
-                  name="Synchronisation Partenaires"
-                  parent="base.menu_administration"
-                  action="action_sync_partners"/>
+        <!-- Formulaire avec bouton manuel -->
+        <record id="view_form_sync_partners" model="ir.ui.view">
+            <field name="name">view.sync.partners.form</field>
+            <field name="model">metallerie.sync.partner</field>
+            <field name="arch" type="xml">
+                <form string="Synchronisation Partenaires">
+                    <header>
+                        <button string="Lancer Synchronisation" type="object" name="sync_v16_to_v18" class="oe_highlight"/>
+                    </header>
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+        <!-- Action pour formulaire -->
+        <record id="action_form_sync_partners" model="ir.actions.act_window">
+            <field name="name">Synchronisation Partenaires</field>
+            <field name="res_model">metallerie.sync.partner</field>
+            <field name="view_mode">form</field>
+            <field name="view_id" ref="view_form_sync_partners"/>
+        </record>
+
+        <!-- Menu pour le formulaire -->
+        <menuitem id="menu_form_sync_partners" 
+                  name="Synchronisation Partenaires (Form)" 
+                  parent="base.menu_administration" 
+                  action="action_form_sync_partners"/>
     </data>
 </odoo>

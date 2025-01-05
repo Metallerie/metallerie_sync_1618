@@ -21,7 +21,8 @@ metallerie_sync_1618/
 │   ├── cron_jobs.xml     # Configuration des tâches planifiées
 │
 └── views/
-    ├── sync_views.xml    #    """,
+    ├── sync_compagny_views.xml    # 
+    ├── sync_partners_views.xml    # """,
 
     'author': "Franck Bardina ",
     'website': "https://www.metallerie.xyz",
